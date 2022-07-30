@@ -10,9 +10,9 @@ The service-api-requisition is organized around REST. Our API has predictable re
 
 ## Errors
 
-Service Api Requisition uses conventional HTTP response codes to indicate the success or failure of an API request. In general: Codes in the 2xx range indicate success. Codes in the 4xx range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.). Codes in the 5xx range indicate an error with Stripe's servers (these are rare).
+Service Api Requisition uses conventional HTTP response codes to indicate the success or failure of an API request. In general: Codes in the ```2xx``` range indicate success. Codes in the ```4xx``` range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.). Codes in the ```5xx``` range indicate an error with Stripe's servers (these are rare).
 
-Some 4xx errors that could be handled programmatically (e.g., a card is declined) include an error code that briefly explains the error reported.
+Some ```4xx``` errors that could be handled programmatically (e.g., a card is declined) include an error code that briefly explains the error reported.
 
  # HTTPS STATUS CODE SUMMRY
 
@@ -37,6 +37,69 @@ Code   | Summary
 808 - PARSE_EXCEPTION | Parse exception
 8020 - NO_APPROVAL_RIGHTS | Current role cannot approve
 
+## Attributes
+
+**type** *string*
+
+The type of error returned. One of api_error, card_error, idempotency_error, or invalid_request_error
+
+**code** *string*
+
+For some errors that could be handled programmatically, a short string indicating the error code reported.
+
+**message** *string*
+
+A human-readable message providing more details about the error. For card errors, these messages can be shown to your users.
+
+**param** *string*
+
+If the error is parameter-specific, the parameter related to the error. For example, you can use this to display a message near the correct form field.
+
+ # Error Type and Description
+
+Error Type   | Description
+------------- | -------------
+api_error |	API errors cover any other type of problem (e.g., a temporary problem with Stripe's servers), and are extremely uncommon.
+card_error |	Card errors are the most common type of error you should expect to handle. They result when the user enters a card that can't be charged for some reason.
+idempotency_error |	Idempotency errors occur when an Idempotency-Key | is re-used on a request that does not match the first request's API endpoint and parameters.
+invalid_request_error |	Invalid request errors arise when your request has invalid parameters.
+
+## **Requisitions-Entity**
+    Requisitions{
+    	/*requisitionNo : Unique number for each requistion*/
+    	requisitionNo String
+    	/*createdOn : request date*/
+    	createdOn Instant
+    	/*createdBy : requested by*/
+    	createdBy String
+    	/*updatedOn : request update date*/
+    	updatedOn Instant
+    	/*updatedOn : request update by*/
+    	updatedBy String
+    	status String
+    	/**
+    	*progressStage : ReadyToBuy, POGenerated, SendToVendors, 
+    	*QuotationReceived,QuotationApproved,InvoiceGenerated,
+    	*PaymentCompleted
+    	**/
+    	progressStage String
+    	financialYear Integer
+    	/*type : purchase*/
+    	type String
+    	totalPrice Integer 
+    	notes String maxlength(5000)
+    	dueDate LocalDate
+ 	}
+
+## **Requisitions**
+    End Points
+        POST /requisitions
+        PUT  /requisitions
+        POST /requisitions/approve
+        GET  /requisitions
+        GET  /requisitions/:id
+        DELETE /requisitions/:id
+		POST /requisitions/sendToVendor
 
 **/requisitions**
 
@@ -190,6 +253,30 @@ curl --location --request POST 'http://localhost:7050/api/requisitions/approve' 
     "role":"ROLE_ADMIN"
 }'
 ```
+## **RequisitionLineItem-Entity**
+    RequisitionLineItem{
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+    	status String
+    	progressStage String
+    	itemDescription String
+    	orderQuantity Integer
+    	price Integer
+    	priority String
+    	notes String maxlength(5000)
+    	dueDate LocalDate
+   	    ratePerItem Integer
+ 	}
+## **RequisitionLineItem**
+    End Points
+        POST /requisitionLineItem
+        PUT  /requisitionLineItem
+        GET  /requisitionLineItem
+        GET  /requisitionLineItem/:id
+        DELETE /requisitionLineItem/:id
+
 **/requisitionLineItem**
 
 Api to create requisition line item.
@@ -313,6 +400,25 @@ Api to get requisition line item by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/requisitionLineItem/89014587
 ```
+## **Committee-Entity**
+    Committee{
+    	name String
+    	type String
+    	status String
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+    	notes String maxlength(5000)
+ 	}
+## **Committee**
+    End Points
+        POST /committee
+        PUT  /committee
+        GET  /committee
+        GET  /committee/:id
+        DELETE /committee/:id
+
 **/committee**
 
 Api to create committee.
@@ -397,6 +503,29 @@ Api to get committee by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/committee/2002'
 ```
+## **CommitteeMembers-Entity**
+    CommitteeMembers{
+    	name String
+    	company String
+    	department String
+    	phoneNumber String
+    	email String
+    	status String
+    	designation String
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+ 	}
+
+## **CommitteeMembers**
+    End Points
+        POST /committeeMembers
+        PUT  /committeeMembers
+        GET  /committeeMembers
+        GET  /committeeMembers/:id
+        DELETE /committeeMembers/:id
+
 **/committeeMembers**
 
 Api to create committee members.
@@ -495,6 +624,22 @@ Api to get committee members by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/committeeMembers/2201'
 ```
+## **Currency-Entity**
+    Currency{
+		code String
+		countryName String
+		countryCode String
+		status String
+ 	}
+
+## **Currency**
+    End Points
+        POST /currency
+        PUT  /currency
+        GET  /currency
+        GET  /currency/:id
+        DELETE /currency/:id
+
 **/currency**
 
 Api to create currency.
@@ -585,6 +730,20 @@ Api to get currency by id.
 curl --location --request GET 'http://localhost:7050/api/currency/2301' \
 --data-raw ''
 ```
+## **Department-Entity**
+    Department{
+		name String
+	    status String
+ 	}
+
+## **department**
+    End Points
+        POST /department
+        PUT  /department
+        GET  /department
+        GET  /department/:id
+        DELETE /department/:id
+
 **/department**
 
 Api to create department.
@@ -670,6 +829,31 @@ Api to get department by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/department/2351'
 ```
+## **Invoice-Entity**
+    invoice{
+		invoiceNo String
+		amount Integer
+		modeOfPayment String
+		txnRefNo String
+		chequeOrDdNo String
+		issuerBank String
+		status String
+		createdOn Instant
+		createdBy String
+		updatedOn Instant
+		updatedBy String
+		dueDate LocalDate
+		notes String maxlength(5000)
+ 	}
+
+## **Invoice**
+    End Points
+        POST /invoice
+        PUT  /invoice
+        GET  /invoice
+        GET  /invoice/:id
+        DELETE /invoice/:id
+
 **/invoice**
 
 Api to create invoice.
@@ -765,6 +949,28 @@ Api to get invoice by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/invoice/2401'
 ```
+## **PurchaseOrder-Entity**
+    purchaseOrder{
+		poNo String
+    	status String
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+   	    dueDate LocalDate
+    	termsAndConditions String maxlength(5000)
+    	notes String maxlength(5000)
+ 	}
+
+## **PurchaseOrder**
+    End Points
+        POST /purchaseOrder
+        PUT  /purchaseOrder
+        GET  /purchaseOrder
+        GET  /purchaseOrder/:id
+        DELETE /purchaseOrder/:id
+		POST /purchaseOrder/approve
+
 **/purchaseOrder**
 
 Api to create purchase order.
@@ -869,6 +1075,26 @@ curl --location --request POST 'http://localhost:7050/api/purchaseOrder/approve'
     "roleName":"CSS AI"
 }'
 ```
+## **Quotation-Entity**
+    Quotation{
+		quotationNo String
+    	status String
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+    	dueDate LocalDate
+    	notes String maxlength(5000)
+ 	}
+
+## **Quotation**
+    End Points
+        POST /quotation
+        PUT  /quotation
+        GET  /quotation
+        GET  /quotation/:id
+        DELETE /quotation/:id
+
 **/quotation**
 
 Api to create quotation.
@@ -944,6 +1170,30 @@ Api to get quotation by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/quotation/2601'
 ```
+## **Vendor-Entity**
+    Vendor{
+		firstName String
+		middleName String
+		lastName String
+		phoneNumber String
+		email String
+		address String
+		zipCode String
+		status String
+		createdOn Instant
+		createdBy String
+		updatedOn Instant
+		updatedBy String
+ 	}
+
+## **Vendor**
+    End Points
+        POST /vendor
+        PUT  /vendor
+        GET  /vendor
+        GET  /vendor/:id
+        DELETE /vendor/:id
+
 **/vendor**
 
 Api to create vendor.
@@ -1037,6 +1287,30 @@ Api to get vendor by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/vendor/2551'
 ```
+## **Buyer-Entity**
+    buyer{
+		firstName String
+		middleName String
+		lastName String
+		phoneNumber String
+		email String
+		address String
+		zipCode String
+		status String
+		createdOn Instant
+		createdBy String
+		updatedOn Instant
+		updatedBy String
+ 	}
+
+## **Buyer**
+    End Points
+        POST /buyer
+        PUT  /buyer
+        GET  /buyer
+        GET  /buyer/:id
+        DELETE /buyer/:id
+
 **/buyer**
 
 Api to create buyer.
@@ -1133,6 +1407,26 @@ Api to get buyer by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/buyer/2701'
 ```
+## **Roles-Entity**
+    Roles{
+		name String
+    	description String
+    	status String
+   		createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+    	securityserviceId Long
+ 	}
+
+## **Roles**
+    End Points
+        POST /roles
+        PUT  /roles
+        GET  /roles
+        GET  /roles/:id
+        DELETE /roles/:id
+
 **/roles**
 
 Api to create roles.
@@ -1223,6 +1517,26 @@ Api to get roles by id.
 curl --location --request GET 'http://localhost:7050/api/roles/3001' \
 --data-raw ''
 ```
+## **Rules-Entity**
+    Rules{
+		name String
+		description String maxlength(5000)
+		status String
+		rule String maxlength(10000)
+		createdOn Instant
+		createdBy String
+		updatedOn Instant
+		updatedBy String
+ 	}
+
+## **Rules**
+    End Points
+        POST /rules
+        PUT  /rules
+        GET  /rules
+        GET  /rules/:id
+        DELETE /rules/:id
+
 **/rules**
 
 Api to create rules.
@@ -1314,6 +1628,26 @@ Api to get rules by id.
 ```
 curl --location --request GET 'http://localhost:7050/api/rules/1104'
 ```
+## **ApprovalRules-Entity**
+    ApprovalRules{
+		role String
+    	minLimit Integer
+    	maxLimit Integer
+    	createdOn Instant
+    	createdBy String
+    	updatedOn Instant
+    	updatedBy String
+    	status String 
+ 	}
+
+## **ApprovalRules**
+    End Points
+        POST /approvalRules
+        PUT  /approvalRules
+        GET  /approvalRules
+        GET  /approvalRules/:id
+        DELETE /approvalRules/:id
+
 **/approvalRules**
 
 Api to create approval rules.
@@ -1401,9 +1735,23 @@ Api to get approvalRules by id.
 curl --location --request GET 'http://localhost:7050/api/approvalRules/5001'
 ```
 
-
-
-
+### Who do I talk to? ###
+	Please mail us on
+	info@syenctiks.com
+Footer
+© 2022 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
 
 
 
